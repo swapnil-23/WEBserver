@@ -3,15 +3,27 @@ package main
 import (
 	"log"
 	"net/http"
+	server "server/pkg/SERVER"
+	"time"
 )
 
 func main() {
-	http.ListenAndServe(":3000", http.HandlerFunc(helloEndpoint))
+	address := ":8080"
+	mux := http.NewServeMux()
+	srv := server.New()
 
-}
+	mux.HandleFunc("/", srv.HandleIndex)
 
-func helloEndpoint(res http.ResponseWriter, req *http.Request) {
-	log.Println(("hello"))
-	res.WriteHeader(200)
-	res.Write([]byte("hello world\n"))
+	mux.HandleFunc("/users", srv.HandleUser)
+
+	s := http.Server{
+		Addr:           address,
+		Handler:        mux,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+	}
+
+	log.Printf("Start server at port 8080: %v", address)
+	log.Fatal(s.ListenAndServe())
 }
